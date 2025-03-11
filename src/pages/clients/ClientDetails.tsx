@@ -25,12 +25,17 @@ import {
   MapPin,
   Globe,
   Info,
-  Shield
+  Shield,
+  Database,
+  Router,
+  Wifi,
+  Monitor
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Mock client data
 const getClientDetails = (id: string) => {
@@ -102,14 +107,59 @@ const networks = [
     isSensitive: true
   },
   { 
-    id:
-3, 
+    id: 3, 
     name: 'Red DMZ', 
     subnet: '192.168.3.0/24', 
     gateway: '192.168.3.1', 
     vlan: '30', 
     type: 'DMZ',
     isSensitive: true
+  },
+];
+
+// Mock switches data
+const switches = [
+  { 
+    id: 1, 
+    name: 'SW-CORE-01', 
+    ip: '192.168.1.254', 
+    brand: 'Cisco', 
+    model: 'Catalyst 3850', 
+    ports: 48, 
+    location: 'Datacenter 1',
+    isSensitive: false
+  },
+  { 
+    id: 2, 
+    name: 'SW-ACCESS-01', 
+    ip: '192.168.1.253', 
+    brand: 'HP', 
+    model: 'Aruba 2930F', 
+    ports: 24, 
+    location: 'Oficina principal',
+    isSensitive: true
+  },
+];
+
+// Mock wifi data
+const wifiNetworks = [
+  { 
+    id: 1, 
+    name: 'ACME-CORP', 
+    ssid: 'ACME-CORP', 
+    security: 'WPA2-Enterprise', 
+    bandWidth: '5GHz', 
+    coverage: 'Oficina principal',
+    isSensitive: true
+  },
+  { 
+    id: 2, 
+    name: 'ACME-GUEST', 
+    ssid: 'ACME-GUEST', 
+    security: 'WPA2-PSK', 
+    bandWidth: '2.4GHz', 
+    coverage: 'Toda la empresa',
+    isSensitive: false
   },
 ];
 
@@ -147,6 +197,7 @@ const credentials = [
 const ClientDetails = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('info');
+  const [activeTechnicalTab, setActiveTechnicalTab] = useState('servers');
   
   // Fallback for no ID parameter
   if (!id) {
@@ -186,18 +237,14 @@ const ClientDetails = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
+        <TabsList className="bg-muted/50 p-1 w-full sm:w-auto flex flex-wrap gap-1">
           <TabsTrigger value="info" className="data-[state=active]:bg-white">
             <Info className="h-4 w-4 mr-2" />
             Información
           </TabsTrigger>
-          <TabsTrigger value="servers" className="data-[state=active]:bg-white">
-            <Server className="h-4 w-4 mr-2" />
-            Servidores
-          </TabsTrigger>
-          <TabsTrigger value="networks" className="data-[state=active]:bg-white">
-            <Network className="h-4 w-4 mr-2" />
-            Redes
+          <TabsTrigger value="technical" className="data-[state=active]:bg-white">
+            <Database className="h-4 w-4 mr-2" />
+            Información Técnica
           </TabsTrigger>
           <TabsTrigger value="credentials" className="data-[state=active]:bg-white">
             <Key className="h-4 w-4 mr-2" />
@@ -209,6 +256,7 @@ const ClientDetails = () => {
           </TabsTrigger>
         </TabsList>
         
+        {/* Tab de Información General */}
         <TabsContent value="info" className="animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2">
@@ -304,6 +352,20 @@ const ClientDetails = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
+                      <Router className="h-4 w-4 text-purple-500 mr-2" />
+                      <span className="text-sm">Switches</span>
+                    </div>
+                    <span className="font-medium">{switches.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Wifi className="h-4 w-4 text-teal-500 mr-2" />
+                      <span className="text-sm">Redes WiFi</span>
+                    </div>
+                    <span className="font-medium">{wifiNetworks.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <Key className="h-4 w-4 text-amber-500 mr-2" />
                       <span className="text-sm">Credenciales</span>
                     </div>
@@ -348,6 +410,18 @@ const ClientDetails = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
+                      <span>Switches sensibles:</span>
+                      <Badge variant="outline" className="text-amber-500 border-amber-200 bg-amber-50">
+                        {switches.filter(s => s.isSensitive).length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Redes WiFi sensibles:</span>
+                      <Badge variant="outline" className="text-amber-500 border-amber-200 bg-amber-50">
+                        {wifiNetworks.filter(w => w.isSensitive).length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span>Credenciales sensibles:</span>
                       <Badge variant="outline" className="text-amber-500 border-amber-200 bg-amber-50">
                         {credentials.filter(c => c.isSensitive).length}
@@ -366,96 +440,236 @@ const ClientDetails = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="servers" className="animate-fade-in space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Servidores</h2>
-            <Button>
-              <Server className="h-4 w-4 mr-2" />
-              Agregar servidor
-            </Button>
-          </div>
-          
+        {/* Nuevo Tab de Información Técnica con subtabs */}
+        <TabsContent value="technical" className="animate-fade-in space-y-6">
           <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center">
+                  <Database className="h-5 w-5 mr-2 text-primary" />
+                  Información Técnica
+                </CardTitle>
+                <Tabs 
+                  value={activeTechnicalTab} 
+                  onValueChange={setActiveTechnicalTab}
+                  className="mt-4 sm:mt-0"
+                >
+                  <TabsList className="bg-muted/40 p-1">
+                    <TabsTrigger value="servers" className="text-xs py-1.5 px-2">
+                      <Server className="h-3.5 w-3.5 mr-1" />
+                      Servidores
+                    </TabsTrigger>
+                    <TabsTrigger value="networks" className="text-xs py-1.5 px-2">
+                      <Network className="h-3.5 w-3.5 mr-1" />
+                      Redes
+                    </TabsTrigger>
+                    <TabsTrigger value="switches" className="text-xs py-1.5 px-2">
+                      <Router className="h-3.5 w-3.5 mr-1" />
+                      Switches
+                    </TabsTrigger>
+                    <TabsTrigger value="wifi" className="text-xs py-1.5 px-2">
+                      <Wifi className="h-3.5 w-3.5 mr-1" />
+                      WiFi
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>IP</TableHead>
-                    <TableHead>Sistema Operativo</TableHead>
-                    <TableHead>Rol</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                    <TableHead>Sensible</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {servers.map((server) => (
-                    <TableRow key={server.id}>
-                      <TableCell className="font-medium">{server.name}</TableCell>
-                      <TableCell>{server.ip}</TableCell>
-                      <TableCell>{server.os}</TableCell>
-                      <TableCell>{server.role}</TableCell>
-                      <TableCell>{server.location}</TableCell>
-                      <TableCell>
-                        {server.isSensitive ? (
-                          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
-                        )}
-                      </TableCell>
+              <TabsContent value="servers" className="mt-0 p-0">
+                <div className="px-6 py-4 border-b flex justify-between items-center">
+                  <h3 className="font-medium">Servidores</h3>
+                  <Button size="sm">
+                    <Server className="h-4 w-4 mr-2" />
+                    Agregar servidor
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>IP</TableHead>
+                      <TableHead>Sistema Operativo</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead>Ubicación</TableHead>
+                      <TableHead>Sensible</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {servers.map((server) => (
+                      <TableRow key={server.id}>
+                        <TableCell className="font-medium">{server.name}</TableCell>
+                        <TableCell>{server.ip}</TableCell>
+                        <TableCell>{server.os}</TableCell>
+                        <TableCell>{server.role}</TableCell>
+                        <TableCell>{server.location}</TableCell>
+                        <TableCell>
+                          {server.isSensitive ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Requiere autorización para acceder</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="networks" className="mt-0 p-0">
+                <div className="px-6 py-4 border-b flex justify-between items-center">
+                  <h3 className="font-medium">Redes</h3>
+                  <Button size="sm">
+                    <Network className="h-4 w-4 mr-2" />
+                    Agregar red
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Subred</TableHead>
+                      <TableHead>Gateway</TableHead>
+                      <TableHead>VLAN</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Sensible</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {networks.map((network) => (
+                      <TableRow key={network.id}>
+                        <TableCell className="font-medium">{network.name}</TableCell>
+                        <TableCell>{network.subnet}</TableCell>
+                        <TableCell>{network.gateway}</TableCell>
+                        <TableCell>{network.vlan}</TableCell>
+                        <TableCell>{network.type}</TableCell>
+                        <TableCell>
+                          {network.isSensitive ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Requiere autorización para acceder</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="switches" className="mt-0 p-0">
+                <div className="px-6 py-4 border-b flex justify-between items-center">
+                  <h3 className="font-medium">Switches</h3>
+                  <Button size="sm">
+                    <Router className="h-4 w-4 mr-2" />
+                    Agregar switch
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>IP</TableHead>
+                      <TableHead>Marca</TableHead>
+                      <TableHead>Modelo</TableHead>
+                      <TableHead>Puertos</TableHead>
+                      <TableHead>Ubicación</TableHead>
+                      <TableHead>Sensible</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {switches.map((sw) => (
+                      <TableRow key={sw.id}>
+                        <TableCell className="font-medium">{sw.name}</TableCell>
+                        <TableCell>{sw.ip}</TableCell>
+                        <TableCell>{sw.brand}</TableCell>
+                        <TableCell>{sw.model}</TableCell>
+                        <TableCell>{sw.ports}</TableCell>
+                        <TableCell>{sw.location}</TableCell>
+                        <TableCell>
+                          {sw.isSensitive ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Requiere autorización para acceder</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="wifi" className="mt-0 p-0">
+                <div className="px-6 py-4 border-b flex justify-between items-center">
+                  <h3 className="font-medium">Redes WiFi</h3>
+                  <Button size="sm">
+                    <Wifi className="h-4 w-4 mr-2" />
+                    Agregar red WiFi
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>SSID</TableHead>
+                      <TableHead>Seguridad</TableHead>
+                      <TableHead>Banda</TableHead>
+                      <TableHead>Cobertura</TableHead>
+                      <TableHead>Sensible</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {wifiNetworks.map((wifi) => (
+                      <TableRow key={wifi.id}>
+                        <TableCell className="font-medium">{wifi.name}</TableCell>
+                        <TableCell>{wifi.ssid}</TableCell>
+                        <TableCell>{wifi.security}</TableCell>
+                        <TableCell>{wifi.bandWidth}</TableCell>
+                        <TableCell>{wifi.coverage}</TableCell>
+                        <TableCell>
+                          {wifi.isSensitive ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Requiere autorización para acceder</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="networks" className="animate-fade-in space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Redes</h2>
-            <Button>
-              <Network className="h-4 w-4 mr-2" />
-              Agregar red
-            </Button>
-          </div>
-          
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Subred</TableHead>
-                    <TableHead>Gateway</TableHead>
-                    <TableHead>VLAN</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Sensible</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {networks.map((network) => (
-                    <TableRow key={network.id}>
-                      <TableCell className="font-medium">{network.name}</TableCell>
-                      <TableCell>{network.subnet}</TableCell>
-                      <TableCell>{network.gateway}</TableCell>
-                      <TableCell>{network.vlan}</TableCell>
-                      <TableCell>{network.type}</TableCell>
-                      <TableCell>
-                        {network.isSensitive ? (
-                          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-500">Sí</Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-600">No</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
+        {/* Tab de Credenciales */}
         <TabsContent value="credentials" className="animate-fade-in space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Credenciales</h2>
@@ -466,6 +680,10 @@ const ClientDetails = () => {
           </div>
           
           <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Credenciales de acceso</CardTitle>
+              <CardDescription>Información de acceso a sistemas y servicios</CardDescription>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
@@ -485,12 +703,19 @@ const ClientDetails = () => {
                       <TableCell>{credential.username}</TableCell>
                       <TableCell>
                         {credential.isSensitive ? (
-                          <span className="flex items-center">
-                            <span className="text-gray-400">********</span>
-                            <Button variant="ghost" size="sm" className="ml-2 h-6 px-2">
-                              Ver
-                            </Button>
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                                <span className="text-gray-400">********</span>
+                                <Button variant="ghost" size="sm" className="ml-2 h-6 px-2">
+                                  Solicitar acceso
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Esta credencial requiere aprobación para su visualización</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : (
                           credential.password
                         )}
@@ -512,6 +737,7 @@ const ClientDetails = () => {
           </Card>
         </TabsContent>
         
+        {/* Tab de Documentos */}
         <TabsContent value="documents" className="animate-fade-in space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Documentos</h2>

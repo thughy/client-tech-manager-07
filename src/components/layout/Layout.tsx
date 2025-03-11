@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import PageTransition from '../ui/PageTransition';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -30,19 +31,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [navigate]);
   
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 overflow-auto">
-        <Header title={title} />
+    <TooltipProvider>
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        <Sidebar />
         
-        <main className="p-6">
-          <PageTransition>
-            {children || <Outlet />}
-          </PageTransition>
-        </main>
+        <div className="flex-1 overflow-auto">
+          <Header title={title} />
+          
+          <main className="p-6 pb-16">
+            <PageTransition>
+              {children || <Outlet />}
+            </PageTransition>
+          </main>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
