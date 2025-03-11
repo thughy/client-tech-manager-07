@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,14 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Check if already logged in
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +42,24 @@ const Login = () => {
       
       // For demo purposes - in a real app, validate credentials with API
       if (email === 'admin@example.com' && password === 'password') {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userRole', 'admin');
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido al sistema de gestión",
+        });
+        navigate('/');
+      } else if (email === 'coordinador@example.com' && password === 'password') {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userRole', 'coordinador');
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido al sistema de gestión",
+        });
+        navigate('/');
+      } else if (email === 'tecnico@example.com' && password === 'password') {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userRole', 'tecnico');
         toast({
           title: "Inicio de sesión exitoso",
           description: "Bienvenido al sistema de gestión",
@@ -140,6 +166,10 @@ const Login = () => {
           Para propósitos de demostración, use:
           <br />
           <span className="font-medium">admin@example.com / password</span>
+          <br />
+          <span className="font-medium">coordinador@example.com / password</span>
+          <br />
+          <span className="font-medium">tecnico@example.com / password</span>
         </p>
       </div>
     </div>

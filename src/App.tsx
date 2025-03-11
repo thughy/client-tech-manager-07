@@ -10,15 +10,14 @@ import Login from "./pages/Login";
 import Layout from "./components/layout/Layout";
 import ClientList from "./pages/clients/ClientList";
 import ClientDetails from "./pages/clients/ClientDetails";
+import React from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <BrowserRouter>
+      <React.StrictMode>
         <Routes>
           <Route path="/login" element={<Login />} />
           
@@ -36,8 +35,10 @@ const App = () => (
           
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+        <Toaster />
+        <Sonner />
+      </React.StrictMode>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

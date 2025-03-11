@@ -1,17 +1,36 @@
 
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   title?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ title = 'Dashboard' }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userRole');
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión correctamente",
+    });
+    navigate('/login');
+  };
+  
+  const userRole = localStorage.getItem('userRole') || 'usuario';
+  const displayName = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+  const initials = displayName.substring(0, 2).toUpperCase();
+  
   return (
     <header className="w-full bg-white/70 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40 flex h-16 items-center justify-between px-6">
       <div className="flex items-center">
@@ -39,9 +58,9 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard' }) => {
               <Button variant="ghost" size="sm" className="gap-2 text-gray-600">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" />
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium">AD</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline font-medium">Admin</span>
+                <span className="hidden md:inline font-medium">{displayName}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-2" align="end">
@@ -54,7 +73,13 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard' }) => {
                   Configuración
                 </Button>
                 <Separator className="my-1" />
-                <Button variant="ghost" size="sm" className="justify-start font-normal text-red-500 hover:text-red-600 hover:bg-red-50">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start font-normal text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
                   Cerrar sesión
                 </Button>
               </div>
