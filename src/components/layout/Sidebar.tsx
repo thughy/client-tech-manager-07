@@ -74,7 +74,7 @@ const Sidebar = () => {
       )}
       
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out transform",
+        "fixed inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out",
         isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
         "w-64 flex flex-col h-screen"
       )}>
